@@ -1,0 +1,396 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/node', '/usr/bin/npm', 'install', 'pm2', '-g' ]
+2 info using npm@3.5.2
+3 info using node@v8.10.0
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readGlobalPackageData
+7 silly fetchPackageMetaData pm2
+8 silly fetchNamedPackageData pm2
+9 silly mapToRegistry name pm2
+10 silly mapToRegistry using default registry
+11 silly mapToRegistry registry https://registry.npmjs.org/
+12 silly mapToRegistry uri https://registry.npmjs.org/pm2
+13 verbose get https://registry.npmjs.org/pm2 not expired, no request
+14 silly install normalizeTree
+15 silly loadCurrentTree Finishing
+16 silly loadIdealTree Starting
+17 silly install loadIdealTree
+18 silly cloneCurrentTree Starting
+19 silly install cloneCurrentTreeToIdealTree
+20 silly cloneCurrentTree Finishing
+21 silly loadShrinkwrap Starting
+22 silly install loadShrinkwrap
+23 silly loadShrinkwrap Finishing
+24 silly loadAllDepsIntoIdealTree Starting
+25 silly install loadAllDepsIntoIdealTree
+26 silly resolveWithNewModule pm2@5.2.0 checking installable status
+27 silly cache add args [ 'pm2', null ]
+28 verbose cache add spec pm2
+29 silly cache add parsed spec Result {
+29 silly cache add   raw: 'pm2',
+29 silly cache add   scope: null,
+29 silly cache add   name: 'pm2',
+29 silly cache add   rawSpec: '',
+29 silly cache add   spec: 'latest',
+29 silly cache add   type: 'tag' }
+30 silly addNamed pm2@latest
+31 verbose addNamed "latest" is being treated as a dist-tag for pm2
+32 info addNameTag [ 'pm2', 'latest' ]
+33 silly mapToRegistry name pm2
+34 silly mapToRegistry using default registry
+35 silly mapToRegistry registry https://registry.npmjs.org/
+36 silly mapToRegistry uri https://registry.npmjs.org/pm2
+37 verbose addNameTag registry:https://registry.npmjs.org/pm2 not in flight; fetching
+38 verbose get https://registry.npmjs.org/pm2 not expired, no request
+39 silly addNameTag next cb for pm2 with tag latest
+40 silly addNamed pm2@5.2.0
+41 verbose addNamed "5.2.0" is a plain semver version for pm2
+42 silly cache afterAdd pm2@5.2.0
+43 verbose afterAdd /root/.npm/pm2/5.2.0/package/package.json not in flight; writing
+44 verbose afterAdd /root/.npm/pm2/5.2.0/package/package.json written
+45 silly fetchNamedPackageData @pm2/agent
+46 silly mapToRegistry name @pm2/agent
+47 silly mapToRegistry scope (from package name) @pm2
+48 verbose mapToRegistry no registry URL found in name for scope @pm2
+49 silly mapToRegistry using default registry
+50 silly mapToRegistry registry https://registry.npmjs.org/
+51 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fagent
+52 silly fetchNamedPackageData @pm2/io
+53 silly mapToRegistry name @pm2/io
+54 silly mapToRegistry scope (from package name) @pm2
+55 verbose mapToRegistry no registry URL found in name for scope @pm2
+56 silly mapToRegistry using default registry
+57 silly mapToRegistry registry https://registry.npmjs.org/
+58 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fio
+59 silly fetchNamedPackageData @pm2/js-api
+60 silly mapToRegistry name @pm2/js-api
+61 silly mapToRegistry scope (from package name) @pm2
+62 verbose mapToRegistry no registry URL found in name for scope @pm2
+63 silly mapToRegistry using default registry
+64 silly mapToRegistry registry https://registry.npmjs.org/
+65 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fjs-api
+66 silly fetchNamedPackageData async
+67 silly mapToRegistry name async
+68 silly mapToRegistry using default registry
+69 silly mapToRegistry registry https://registry.npmjs.org/
+70 silly mapToRegistry uri https://registry.npmjs.org/async
+71 silly fetchNamedPackageData blessed
+72 silly mapToRegistry name blessed
+73 silly mapToRegistry using default registry
+74 silly mapToRegistry registry https://registry.npmjs.org/
+75 silly mapToRegistry uri https://registry.npmjs.org/blessed
+76 silly fetchNamedPackageData chalk
+77 silly mapToRegistry name chalk
+78 silly mapToRegistry using default registry
+79 silly mapToRegistry registry https://registry.npmjs.org/
+80 silly mapToRegistry uri https://registry.npmjs.org/chalk
+81 silly fetchNamedPackageData chokidar
+82 silly mapToRegistry name chokidar
+83 silly mapToRegistry using default registry
+84 silly mapToRegistry registry https://registry.npmjs.org/
+85 silly mapToRegistry uri https://registry.npmjs.org/chokidar
+86 silly fetchNamedPackageData cli-tableau
+87 silly mapToRegistry name cli-tableau
+88 silly mapToRegistry using default registry
+89 silly mapToRegistry registry https://registry.npmjs.org/
+90 silly mapToRegistry uri https://registry.npmjs.org/cli-tableau
+91 silly fetchNamedPackageData commander
+92 silly mapToRegistry name commander
+93 silly mapToRegistry using default registry
+94 silly mapToRegistry registry https://registry.npmjs.org/
+95 silly mapToRegistry uri https://registry.npmjs.org/commander
+96 silly fetchNamedPackageData croner
+97 silly mapToRegistry name croner
+98 silly mapToRegistry using default registry
+99 silly mapToRegistry registry https://registry.npmjs.org/
+100 silly mapToRegistry uri https://registry.npmjs.org/croner
+101 silly fetchNamedPackageData dayjs
+102 silly mapToRegistry name dayjs
+103 silly mapToRegistry using default registry
+104 silly mapToRegistry registry https://registry.npmjs.org/
+105 silly mapToRegistry uri https://registry.npmjs.org/dayjs
+106 silly fetchNamedPackageData debug
+107 silly mapToRegistry name debug
+108 silly mapToRegistry using default registry
+109 silly mapToRegistry registry https://registry.npmjs.org/
+110 silly mapToRegistry uri https://registry.npmjs.org/debug
+111 silly fetchNamedPackageData enquirer
+112 silly mapToRegistry name enquirer
+113 silly mapToRegistry using default registry
+114 silly mapToRegistry registry https://registry.npmjs.org/
+115 silly mapToRegistry uri https://registry.npmjs.org/enquirer
+116 silly fetchNamedPackageData eventemitter2
+117 silly mapToRegistry name eventemitter2
+118 silly mapToRegistry using default registry
+119 silly mapToRegistry registry https://registry.npmjs.org/
+120 silly mapToRegistry uri https://registry.npmjs.org/eventemitter2
+121 silly fetchNamedPackageData sprintf-js
+122 silly mapToRegistry name sprintf-js
+123 silly mapToRegistry using default registry
+124 silly mapToRegistry registry https://registry.npmjs.org/
+125 silly mapToRegistry uri https://registry.npmjs.org/sprintf-js
+126 silly fetchNamedPackageData fclone
+127 silly mapToRegistry name fclone
+128 silly mapToRegistry using default registry
+129 silly mapToRegistry registry https://registry.npmjs.org/
+130 silly mapToRegistry uri https://registry.npmjs.org/fclone
+131 silly fetchNamedPackageData mkdirp
+132 silly mapToRegistry name mkdirp
+133 silly mapToRegistry using default registry
+134 silly mapToRegistry registry https://registry.npmjs.org/
+135 silly mapToRegistry uri https://registry.npmjs.org/mkdirp
+136 silly fetchNamedPackageData needle
+137 silly mapToRegistry name needle
+138 silly mapToRegistry using default registry
+139 silly mapToRegistry registry https://registry.npmjs.org/
+140 silly mapToRegistry uri https://registry.npmjs.org/needle
+141 silly fetchNamedPackageData pidusage
+142 silly mapToRegistry name pidusage
+143 silly mapToRegistry using default registry
+144 silly mapToRegistry registry https://registry.npmjs.org/
+145 silly mapToRegistry uri https://registry.npmjs.org/pidusage
+146 silly fetchNamedPackageData pm2-axon
+147 silly mapToRegistry name pm2-axon
+148 silly mapToRegistry using default registry
+149 silly mapToRegistry registry https://registry.npmjs.org/
+150 silly mapToRegistry uri https://registry.npmjs.org/pm2-axon
+151 silly fetchNamedPackageData pm2-axon-rpc
+152 silly mapToRegistry name pm2-axon-rpc
+153 silly mapToRegistry using default registry
+154 silly mapToRegistry registry https://registry.npmjs.org/
+155 silly mapToRegistry uri https://registry.npmjs.org/pm2-axon-rpc
+156 silly fetchNamedPackageData pm2-deploy
+157 silly mapToRegistry name pm2-deploy
+158 silly mapToRegistry using default registry
+159 silly mapToRegistry registry https://registry.npmjs.org/
+160 silly mapToRegistry uri https://registry.npmjs.org/pm2-deploy
+161 silly fetchNamedPackageData pm2-multimeter
+162 silly mapToRegistry name pm2-multimeter
+163 silly mapToRegistry using default registry
+164 silly mapToRegistry registry https://registry.npmjs.org/
+165 silly mapToRegistry uri https://registry.npmjs.org/pm2-multimeter
+166 silly fetchNamedPackageData promptly
+167 silly mapToRegistry name promptly
+168 silly mapToRegistry using default registry
+169 silly mapToRegistry registry https://registry.npmjs.org/
+170 silly mapToRegistry uri https://registry.npmjs.org/promptly
+171 silly fetchNamedPackageData semver
+172 silly mapToRegistry name semver
+173 silly mapToRegistry using default registry
+174 silly mapToRegistry registry https://registry.npmjs.org/
+175 silly mapToRegistry uri https://registry.npmjs.org/semver
+176 silly fetchNamedPackageData source-map-support
+177 silly mapToRegistry name source-map-support
+178 silly mapToRegistry using default registry
+179 silly mapToRegistry registry https://registry.npmjs.org/
+180 silly mapToRegistry uri https://registry.npmjs.org/source-map-support
+181 silly fetchNamedPackageData vizion
+182 silly mapToRegistry name vizion
+183 silly mapToRegistry using default registry
+184 silly mapToRegistry registry https://registry.npmjs.org/
+185 silly mapToRegistry uri https://registry.npmjs.org/vizion
+186 silly fetchNamedPackageData yamljs
+187 silly mapToRegistry name yamljs
+188 silly mapToRegistry using default registry
+189 silly mapToRegistry registry https://registry.npmjs.org/
+190 silly mapToRegistry uri https://registry.npmjs.org/yamljs
+191 silly fetchNamedPackageData pm2-sysmonit
+192 silly mapToRegistry name pm2-sysmonit
+193 silly mapToRegistry using default registry
+194 silly mapToRegistry registry https://registry.npmjs.org/
+195 silly mapToRegistry uri https://registry.npmjs.org/pm2-sysmonit
+196 silly fetchNamedPackageData @pm2/pm2-version-check
+197 silly mapToRegistry name @pm2/pm2-version-check
+198 silly mapToRegistry scope (from package name) @pm2
+199 verbose mapToRegistry no registry URL found in name for scope @pm2
+200 silly mapToRegistry using default registry
+201 silly mapToRegistry registry https://registry.npmjs.org/
+202 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fpm2-version-check
+203 verbose get https://registry.npmjs.org/@pm2%2fagent not expired, no request
+204 silly resolveWithNewModule @pm2/agent@2.0.1 checking installable status
+205 silly cache add args [ '@pm2/agent@~2.0.0', null ]
+206 verbose cache add spec @pm2/agent@~2.0.0
+207 silly cache add parsed spec Result {
+207 silly cache add   raw: '@pm2/agent@~2.0.0',
+207 silly cache add   scope: '@pm2',
+207 silly cache add   name: '@pm2/agent',
+207 silly cache add   rawSpec: '~2.0.0',
+207 silly cache add   spec: '>=2.0.0 <2.1.0',
+207 silly cache add   type: 'range' }
+208 silly addNamed @pm2/agent@>=2.0.0 <2.1.0
+209 verbose addNamed ">=2.0.0 <2.1.0" is a valid semver range for @pm2/agent
+210 silly addNameRange { name: '@pm2/agent', range: '>=2.0.0 <2.1.0', hasData: false }
+211 silly mapToRegistry name @pm2/agent
+212 silly mapToRegistry scope (from package name) @pm2
+213 verbose mapToRegistry no registry URL found in name for scope @pm2
+214 silly mapToRegistry using default registry
+215 silly mapToRegistry registry https://registry.npmjs.org/
+216 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fagent
+217 verbose addNameRange registry:https://registry.npmjs.org/@pm2%2fagent not in flight; fetching
+218 verbose get https://registry.npmjs.org/@pm2%2fjs-api not expired, no request
+219 silly resolveWithNewModule @pm2/js-api@0.6.7 checking installable status
+220 silly cache add args [ '@pm2/js-api@~0.6.7', null ]
+221 verbose cache add spec @pm2/js-api@~0.6.7
+222 silly cache add parsed spec Result {
+222 silly cache add   raw: '@pm2/js-api@~0.6.7',
+222 silly cache add   scope: '@pm2',
+222 silly cache add   name: '@pm2/js-api',
+222 silly cache add   rawSpec: '~0.6.7',
+222 silly cache add   spec: '>=0.6.7 <0.7.0',
+222 silly cache add   type: 'range' }
+223 silly addNamed @pm2/js-api@>=0.6.7 <0.7.0
+224 verbose addNamed ">=0.6.7 <0.7.0" is a valid semver range for @pm2/js-api
+225 silly addNameRange { name: '@pm2/js-api', range: '>=0.6.7 <0.7.0', hasData: false }
+226 silly mapToRegistry name @pm2/js-api
+227 silly mapToRegistry scope (from package name) @pm2
+228 verbose mapToRegistry no registry URL found in name for scope @pm2
+229 silly mapToRegistry using default registry
+230 silly mapToRegistry registry https://registry.npmjs.org/
+231 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fjs-api
+232 verbose addNameRange registry:https://registry.npmjs.org/@pm2%2fjs-api not in flight; fetching
+233 verbose get https://registry.npmjs.org/async not expired, no request
+234 silly resolveWithNewModule async@3.2.4 checking installable status
+235 silly cache add args [ 'async@~3.2.0', null ]
+236 verbose cache add spec async@~3.2.0
+237 silly cache add parsed spec Result {
+237 silly cache add   raw: 'async@~3.2.0',
+237 silly cache add   scope: null,
+237 silly cache add   name: 'async',
+237 silly cache add   rawSpec: '~3.2.0',
+237 silly cache add   spec: '>=3.2.0 <3.3.0',
+237 silly cache add   type: 'range' }
+238 silly addNamed async@>=3.2.0 <3.3.0
+239 verbose addNamed ">=3.2.0 <3.3.0" is a valid semver range for async
+240 silly addNameRange { name: 'async', range: '>=3.2.0 <3.3.0', hasData: false }
+241 silly mapToRegistry name async
+242 silly mapToRegistry using default registry
+243 silly mapToRegistry registry https://registry.npmjs.org/
+244 silly mapToRegistry uri https://registry.npmjs.org/async
+245 verbose addNameRange registry:https://registry.npmjs.org/async not in flight; fetching
+246 verbose get https://registry.npmjs.org/@pm2%2fio not expired, no request
+247 silly resolveWithNewModule @pm2/io@5.0.0 checking installable status
+248 silly cache add args [ '@pm2/io@~5.0.0', null ]
+249 verbose cache add spec @pm2/io@~5.0.0
+250 silly cache add parsed spec Result {
+250 silly cache add   raw: '@pm2/io@~5.0.0',
+250 silly cache add   scope: '@pm2',
+250 silly cache add   name: '@pm2/io',
+250 silly cache add   rawSpec: '~5.0.0',
+250 silly cache add   spec: '>=5.0.0 <5.1.0',
+250 silly cache add   type: 'range' }
+251 silly addNamed @pm2/io@>=5.0.0 <5.1.0
+252 verbose addNamed ">=5.0.0 <5.1.0" is a valid semver range for @pm2/io
+253 silly addNameRange { name: '@pm2/io', range: '>=5.0.0 <5.1.0', hasData: false }
+254 silly mapToRegistry name @pm2/io
+255 silly mapToRegistry scope (from package name) @pm2
+256 verbose mapToRegistry no registry URL found in name for scope @pm2
+257 silly mapToRegistry using default registry
+258 silly mapToRegistry registry https://registry.npmjs.org/
+259 silly mapToRegistry uri https://registry.npmjs.org/@pm2%2fio
+260 verbose addNameRange registry:https://registry.npmjs.org/@pm2%2fio not in flight; fetching
+261 verbose get https://registry.npmjs.org/blessed not expired, no request
+262 silly resolveWithNewModule blessed@0.1.81 checking installable status
+263 silly cache add args [ 'blessed@0.1.81', null ]
+264 verbose cache add spec blessed@0.1.81
+265 silly cache add parsed spec Result {
+265 silly cache add   raw: 'blessed@0.1.81',
+265 silly cache add   scope: null,
+265 silly cache add   name: 'blessed',
+265 silly cache add   rawSpec: '0.1.81',
+265 silly cache add   spec: '0.1.81',
+265 silly cache add   type: 'version' }
+266 silly addNamed blessed@0.1.81
+267 verbose addNamed "0.1.81" is a plain semver version for blessed
+268 silly mapToRegistry name blessed
+269 silly mapToRegistry using default registry
+270 silly mapToRegistry registry https://registry.npmjs.org/
+271 silly mapToRegistry uri https://registry.npmjs.org/blessed
+272 verbose addNameVersion registry:https://registry.npmjs.org/blessed not in flight; fetching
+273 verbose get https://registry.npmjs.org/chalk not expired, no request
+274 silly resolveWithNewModule chalk@3.0.0 checking installable status
+275 silly cache add args [ 'chalk@3.0.0', null ]
+276 verbose cache add spec chalk@3.0.0
+277 silly cache add parsed spec Result {
+277 silly cache add   raw: 'chalk@3.0.0',
+277 silly cache add   scope: null,
+277 silly cache add   name: 'chalk',
+277 silly cache add   rawSpec: '3.0.0',
+277 silly cache add   spec: '3.0.0',
+277 silly cache add   type: 'version' }
+278 silly addNamed chalk@3.0.0
+279 verbose addNamed "3.0.0" is a plain semver version for chalk
+280 silly mapToRegistry name chalk
+281 silly mapToRegistry using default registry
+282 silly mapToRegistry registry https://registry.npmjs.org/
+283 silly mapToRegistry uri https://registry.npmjs.org/chalk
+284 verbose addNameVersion registry:https://registry.npmjs.org/chalk not in flight; fetching
+285 verbose get https://registry.npmjs.org/cli-tableau not expired, no request
+286 silly resolveWithNewModule cli-tableau@2.0.1 checking installable status
+287 silly cache add args [ 'cli-tableau@^2.0.0', null ]
+288 verbose cache add spec cli-tableau@^2.0.0
+289 silly cache add parsed spec Result {
+289 silly cache add   raw: 'cli-tableau@^2.0.0',
+289 silly cache add   scope: null,
+289 silly cache add   name: 'cli-tableau',
+289 silly cache add   rawSpec: '^2.0.0',
+289 silly cache add   spec: '>=2.0.0 <3.0.0',
+289 silly cache add   type: 'range' }
+290 silly addNamed cli-tableau@>=2.0.0 <3.0.0
+291 verbose addNamed ">=2.0.0 <3.0.0" is a valid semver range for cli-tableau
+292 silly addNameRange { name: 'cli-tableau', range: '>=2.0.0 <3.0.0', hasData: false }
+293 silly mapToRegistry name cli-tableau
+294 silly mapToRegistry using default registry
+295 silly mapToRegistry registry https://registry.npmjs.org/
+296 silly mapToRegistry uri https://registry.npmjs.org/cli-tableau
+297 verbose addNameRange registry:https://registry.npmjs.org/cli-tableau not in flight; fetching
+298 verbose get https://registry.npmjs.org/commander not expired, no request
+299 silly resolveWithNewModule commander@2.15.1 checking installable status
+300 silly cache add args [ 'commander@2.15.1', null ]
+301 verbose cache add spec commander@2.15.1
+302 silly cache add parsed spec Result {
+302 silly cache add   raw: 'commander@2.15.1',
+302 silly cache add   scope: null,
+302 silly cache add   name: 'commander',
+302 silly cache add   rawSpec: '2.15.1',
+302 silly cache add   spec: '2.15.1',
+302 silly cache add   type: 'version' }
+303 silly addNamed commander@2.15.1
+304 verbose addNamed "2.15.1" is a plain semver version for commander
+305 silly mapToRegistry name commander
+306 silly mapToRegistry using default registry
+307 silly mapToRegistry registry https://registry.npmjs.org/
+308 silly mapToRegistry uri https://registry.npmjs.org/commander
+309 verbose addNameVersion registry:https://registry.npmjs.org/commander not in flight; fetching
+310 verbose get https://registry.npmjs.org/croner not expired, no request
+311 verbose stack Error: Missing required argument #1
+311 verbose stack     at andLogAndFinish (/usr/share/npm/lib/fetch-package-metadata.js:31:3)
+311 verbose stack     at fetchPackageMetadata (/usr/share/npm/lib/fetch-package-metadata.js:51:22)
+311 verbose stack     at resolveWithNewModule (/usr/share/npm/lib/install/deps.js:456:12)
+311 verbose stack     at /usr/share/npm/lib/install/deps.js:457:7
+311 verbose stack     at /usr/share/npm/node_modules/iferr/index.js:13:50
+311 verbose stack     at /usr/share/npm/lib/fetch-package-metadata.js:37:12
+311 verbose stack     at addRequestedAndFinish (/usr/share/npm/lib/fetch-package-metadata.js:82:5)
+311 verbose stack     at returnAndAddMetadata (/usr/share/npm/lib/fetch-package-metadata.js:117:7)
+311 verbose stack     at pickVersionFromRegistryDocument (/usr/share/npm/lib/fetch-package-metadata.js:134:20)
+311 verbose stack     at /usr/share/npm/node_modules/iferr/index.js:13:50
+312 verbose cwd /root/proj/backend/src
+313 error Linux 4.15.0-184-generic
+314 error argv "/usr/bin/node" "/usr/bin/npm" "install" "pm2" "-g"
+315 error node v8.10.0
+316 error npm  v3.5.2
+317 error code EMISSINGARG
+318 error typeerror Error: Missing required argument #1
+318 error typeerror     at andLogAndFinish (/usr/share/npm/lib/fetch-package-metadata.js:31:3)
+318 error typeerror     at fetchPackageMetadata (/usr/share/npm/lib/fetch-package-metadata.js:51:22)
+318 error typeerror     at resolveWithNewModule (/usr/share/npm/lib/install/deps.js:456:12)
+318 error typeerror     at /usr/share/npm/lib/install/deps.js:457:7
+318 error typeerror     at /usr/share/npm/node_modules/iferr/index.js:13:50
+318 error typeerror     at /usr/share/npm/lib/fetch-package-metadata.js:37:12
+318 error typeerror     at addRequestedAndFinish (/usr/share/npm/lib/fetch-package-metadata.js:82:5)
+318 error typeerror     at returnAndAddMetadata (/usr/share/npm/lib/fetch-package-metadata.js:117:7)
+318 error typeerror     at pickVersionFromRegistryDocument (/usr/share/npm/lib/fetch-package-metadata.js:134:20)
+318 error typeerror     at /usr/share/npm/node_modules/iferr/index.js:13:50
+319 error typeerror This is an error with npm itself. Please report this error at:
+319 error typeerror     <http://github.com/npm/npm/issues>
+320 verbose exit [ 1, true ]
