@@ -1,8 +1,13 @@
 package repo
 
 import (
-	"comedians/src/core/usersConcerts/model"
+	concertsModel "comedians/src/core/concerts/model"
+	usersConcertsModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/db"
+	"fmt"
+	"log"
+
+	// "log"
 
 	"gorm.io/gorm"
 )
@@ -14,30 +19,47 @@ const (
 var concertsDB *gorm.DB
 
 func lazyInit() {
-	if concertsDB == nil {
-		concertsDB = db.DBS.Preload("User").Table(concertsTable)
-	}
+	concertsDB = db.DBS.Preload("User").Preload("UsersLikes").Table(concertsTable)
 }
 
-func CreateConcert(concert model.Concert) error {
+func CreateConcert(concert usersConcertsModel.Concert) error {
 	lazyInit()
 
 	return concertsDB.Create(&concert).Error
 }
 
-func GetConcerts() ([]model.Concert, error) {
+func GetConcerts(filters concertsModel.Filters) ([]usersConcertsModel.Concert, error) {
 	lazyInit()
 
-	var concerts []model.Concert
+	var concerts []usersConcertsModel.Concert
 
-	err := concertsDB.Find(&concerts).Error
+	query := concertsDB.Order(filters.SortBy)
+
+	// if (filters.ComedianId != 0) {
+	// 	query = query.Where("user_id  = ?", filters.ComedianId)
+	// }
+
+	if filters.Year != 0 {
+		yearAt := fmt.Sprint(filters.Year) + "-01-01"
+		yearTo := fmt.Sprint(filters.Year) + "-12-31"
+
+		query = query.Where("created_at >= ? AND created_at <= ?", yearAt, yearTo)
+	}
+
+	if filters.ExcludedId != 0 {
+		query = query.Where("id != ?", filters.ExcludedId)
+	}
+
+	// log.Print(query)
+
+	err := query.Find(&concerts).Error
 	return concerts, err
 }
 
-func GetConcert(id uint64) (model.Concert, error) {
+func GetConcert(id uint64) (usersConcertsModel.Concert, error) {
 	lazyInit()
 
-	var concert model.Concert
+	var concert usersConcertsModel.Concert
 
 	err := concertsDB.First(&concert, "id = ?", id).Error
 	return concert, err
@@ -46,11 +68,34 @@ func GetConcert(id uint64) (model.Concert, error) {
 func DeleteConcert(id uint64) error {
 	lazyInit()
 
-	return db.DBS.Table(concertsTable).Delete(&model.Concert{}, id).Error
+	return concertsDB.Delete(&usersConcertsModel.Concert{}, id).Error
 }
 
-func UpdateConcert(concert model.Concert) error {
+func UpdateConcert(concert usersConcertsModel.Concert) error {
 	lazyInit()
 
-	return db.DBS.Table(concertsTable).Where("id = ?", concert.Id).Updates(&concert).Error
+	return concertsDB.Where("id = ?", concert.Id).Updates(&concert).Error
+}
+
+func UpdateUsersLikes(concert usersConcertsModel.Concert, usersLikes []*usersConcertsModel.User) (usersConcertsModel.Concert, error) {
+	lazyInit()
+
+	log.Print("usersLikes", usersLikes)
+
+	err := db.DBS.Model(&concert).Association("UsersLikes").Clear()
+
+	if err != nil {
+		return usersConcertsModel.Concert{}, err
+	}
+
+	err = concertsDB.Save(&concert).Error
+
+	if err != nil {
+		return usersConcertsModel.Concert{}, err
+	}
+
+	concert.UsersLikes = usersLikes
+
+	err = concertsDB.Save(&concert).Error
+	return concert, err
 }

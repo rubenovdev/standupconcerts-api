@@ -5,9 +5,9 @@ go 1.18
 require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
+	github.com/pkg/errors v0.8.1
 	github.com/sethvargo/go-password v0.2.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/exp v0.0.0-20220609121020-a51bd0440498
 	gopkg.in/dgrijalva/jwt-go.v3 v3.2.0
 	gopkg.in/mail.v2 v2.3.1
 	gorm.io/driver/postgres v1.3.7

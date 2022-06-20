@@ -6,20 +6,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ErrorResponse struct {
-	Message string `json:"message"`
-}
-
 type ResultResponse struct {
 	Message string      `json:"message"`
 	Result  interface{} `json:"result"`
 }
 
-func NewErrorResponse(c *gin.Context, statusCode int, err ErrorResponse) {
-	if len(err.Message) == 0 {
-		err.Message = "error"
+func NewErrorResponse(c *gin.Context, statusCode int, err error) {
+	res := gin.H {
+		"message": err.Error(),
 	}
-	c.AbortWithStatusJSON(statusCode, err)
+
+	c.AbortWithStatusJSON(statusCode, res)
 }
 
 func NewResultResponse(c *gin.Context, statusCode int, result ResultResponse) {

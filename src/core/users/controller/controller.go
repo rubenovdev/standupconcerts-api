@@ -2,32 +2,118 @@ package controller
 
 import (
 	"comedians/src/common"
+	usersModel "comedians/src/core/users/model"
 	"comedians/src/core/users/service"
 	"comedians/src/core/usersConcerts/model"
+	usersConcertModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/middleware"
+	"comedians/src/utils"
+	"errors"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetUsers(c *gin.Context) {
-	users, err := service.GetUsers()
+func updateUserImage(c *gin.Context) {
+	userId, _ := c.Get("userId")
+
+	form, err := c.MultipartForm()
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	file := form.File["image"][0]
+	openedFile, _ := file.Open()
+
+	filepath, err := service.UpdateUserImage(userId.(uint64), openedFile, file.Filename)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
-	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: users})
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"filepath": filepath,
+	}})
 }
 
-func UpdateUser(c *gin.Context) {
-	var input model.User
+func getUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect user id"))
+		return
+	}
+
+	user, err := service.GetUser(id)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"user": user,
+	}})
+}
+
+func updateUserPassword(c *gin.Context) {
+	id, _ := c.Get("userId")
+
+	var input usersModel.UpdateUserPasswordDto
+
+	if err := c.BindJSON(&input); err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	log.Print(input)
+
+	err := service.UpdateUserPassword(id.(uint64), input.Password)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+func getUsers(c *gin.Context) {
+	users, err := service.GetUsers()
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	filtersRole := c.Query("role")
+
+	if len(filtersRole) != 0 {
+		users = utils.Filter(users, func(elem *model.User) bool {
+			for _, role := range elem.Roles {
+				if role.Title == filtersRole {
+					return true
+				}
+			}
+			return false
+		})
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"users": users,
+	}})
+}
+
+func updateCurrentUser(c *gin.Context) {
+	var input usersConcertModel.User
 	id, _ := c.Get("userId")
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 
 		return
 	}
@@ -35,147 +121,173 @@ func UpdateUser(c *gin.Context) {
 	err := service.UpdateUser(id.(uint64), input)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func DeleteUser(c *gin.Context) {
-	id, _  := c.Get("userId")
+func deleteCurrentUser(c *gin.Context) {
+	id, _ := c.Get("userId")
 
 	err := service.DeleteUser(id.(uint64))
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func GetUser(c *gin.Context) {
+func getCurrentUser(c *gin.Context) {
 	id, _ := c.Get("userId")
 
 	user, err := service.GetUser(id.(uint64))
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: user})
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"user": user,
+	}})
 }
 
-func AppendFavoriteConcert(c *gin.Context) {
+func appendFavoriteConcert(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect concert id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.AppendFavoriteConcert(userId.(uint64), concertId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending favorite concert"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func AppendFavoriteComedian(c *gin.Context) {
+func appendFavoriteComedian(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	comedianId, err := strconv.ParseUint(c.Param("userId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect comedian id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.AppendFavoriteComedian(userId.(uint64), comedianId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending favorite comedian"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func AppendSubscription(c *gin.Context) {
+func appendSubscription(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect concert id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.AppendSubscription(userId.(uint64), concertId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending subscription"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func DeleteFavoriteConcert(c *gin.Context) {
+func deleteFavoriteConcert(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect concert id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.DeleteFavoriteConcert(userId.(uint64), concertId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending favorite concert"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func DeleteFavoriteComedian(c *gin.Context) {
+func deleteFavoriteComedian(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	comedianId, err := strconv.ParseUint(c.Param("userId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect comedian id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.DeleteFavoriteComedian(userId.(uint64), comedianId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending favorite comedian"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-func DeleteSubscription(c *gin.Context) {
+func deleteSubscription(c *gin.Context) {
 	userId, _ := c.Get("userId")
 	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect concert id"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = service.DeleteSubscription(userId.(uint64), concertId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "Error appending subscription"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+func like(c *gin.Context) {
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	userId, _ := c.Get("userId")
+
+	if err := service.Like(concertId, userId.(uint64)); err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+func dislike(c *gin.Context) {
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	userId, _ := c.Get("userId")
+
+	if err := service.Dislike(concertId, userId.(uint64)); err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -183,23 +295,32 @@ func DeleteSubscription(c *gin.Context) {
 }
 
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
+	server.Static(os.Getenv("PUBLIC_USERS_IMAGES_DIR"), os.Getenv("USERS_IMAGES_DIR"))
+
 	group := server.Group("users", middleware.AuthMiddleware)
 
-	group.GET("/", GetUsers)
+	group.GET("", getUsers)
+	group.GET(":id", getUser)
+	group.PUT(":id/likes", like)
+	group.PUT(":id/dislikes", dislike)
 
-	currentUserGroup := group.Group("/current")
+	currentUserGroup := group.Group("current")
+	{
+		currentUserGroup.PUT("", updateCurrentUser)
+		currentUserGroup.DELETE("", deleteCurrentUser)
+		currentUserGroup.GET("", getCurrentUser)
 
-	currentUserGroup.PUT("/", UpdateUser)
-	currentUserGroup.DELETE("/", DeleteUser)
-	currentUserGroup.GET("/", GetUser)
+		currentUserGroup.PUT("image", updateUserImage)
+		currentUserGroup.PUT("password", updateUserPassword)
 
-	currentUserGroup.POST("/favorite-concerts/:concertId", AppendFavoriteConcert)
-	currentUserGroup.POST("/subscriptions/:concertId", AppendSubscription)
-	currentUserGroup.POST("/favorite-comedians/:userId", AppendFavoriteComedian)
+		currentUserGroup.POST("favorite-concerts/:concertId", appendFavoriteConcert)
+		currentUserGroup.POST("subscriptions/:concertId", appendSubscription)
+		currentUserGroup.POST("favorite-comedians/:userId", appendFavoriteComedian)
 
-	currentUserGroup.DELETE("/favorite-concerts/:concertId", DeleteFavoriteConcert)
-	currentUserGroup.DELETE("/subscriptions/:concertId", DeleteSubscription)
-	currentUserGroup.DELETE("/favorite-comedians/:userId", DeleteFavoriteComedian)
+		currentUserGroup.DELETE("favorite-concerts/:concertId", deleteFavoriteConcert)
+		currentUserGroup.DELETE("subscriptions/:concertId", deleteSubscription)
+		currentUserGroup.DELETE("favorite-comedians/:userId", deleteFavoriteComedian)
+	}
 
 	return group
 }

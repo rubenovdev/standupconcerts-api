@@ -3,6 +3,7 @@ package repo
 import (
 	"comedians/src/core/usersConcerts/model"
 	"comedians/src/db"
+	"errors"
 	"log"
 
 	"gorm.io/gorm"
@@ -18,13 +19,8 @@ var usersDB *gorm.DB
 var rolesDB *gorm.DB
 
 func lazyInit() {
-	if usersDB == nil {
-		usersDB = db.DBS.Preload("Subscriptions").Preload("FavoriteComedians").Preload("Roles").Preload("Roles.Permissions").Preload("FavoriteConcerts").Table(usersTable)
-	}
-
-	if rolesDB == nil {
-		rolesDB = db.DBS.Table(rolesTable)
-	}
+	usersDB = db.DBS.Preload("Concerts").Preload("Subscriptions").Preload("FavoriteComedians").Preload("Roles").Preload("Roles.Permissions").Preload("FavoriteConcerts").Table(usersTable)
+	rolesDB = db.DBS.Table(rolesTable)
 }
 
 func GetUser(id uint64) (model.User, error) {
@@ -37,10 +33,10 @@ func GetUser(id uint64) (model.User, error) {
 	return user, err
 }
 
-func GetUsers() ([]model.User, error) {
+func GetUsers() ([]*model.User, error) {
 	lazyInit()
 
-	var users []model.User
+	var users []*model.User
 
 	err := usersDB.Find(&users).Error
 
@@ -51,10 +47,10 @@ func GetUserByEmail(email string) (model.User, error) {
 	lazyInit()
 
 	var user model.User
+	var count int64
 
-	if err := usersDB.Where("email = ?", email).Find(&user).Error; err != nil {
-		log.Panic(err)
-		return user, err
+	if usersDB.Where("email = ?", email).Find(&user).Count(&count); count == 0 {
+		return user, errors.New("not found")
 	}
 
 	return user, nil
@@ -62,7 +58,7 @@ func GetUserByEmail(email string) (model.User, error) {
 
 func CreateUser(user model.User) error {
 	lazyInit()
-
+	log.Print("repo user", user)
 	err := usersDB.Create(&user).Error
 
 	return err
@@ -71,20 +67,34 @@ func CreateUser(user model.User) error {
 func UpdateUser(user model.User) error {
 	lazyInit()
 
-	log.Print(user)
-	favoriteComedians := user.FavoriteComedians
-	favoriteConcerts := user.FavoriteConcerts
-	subscriptions := user.Subscriptions
+	return usersDB.Where("id = ?", user.Id).Updates(&user).Error
+}
+
+func UpdateFavoriteComedians(user model.User, favoriteComedians []*model.User) error {
+	lazyInit()
 
 	db.DBS.Model(&user).Association("FavoriteComedians").Clear()
-	db.DBS.Model(&user).Association("FavoriteConcerts").Clear()
-	db.DBS.Model(&user).Association("Subscriptions").Clear()
-
-	user.Subscriptions = subscriptions
+	db.DBS.Save(&user)
 	user.FavoriteComedians = favoriteComedians
-	user.FavoriteConcerts = favoriteConcerts
+	return db.DBS.Save(&user).Error
+}
 
-	return usersDB.Where("id = ?", user.Id).Updates(&user).Error
+func UpdateFavoriteConcerts(user model.User, favoriteConcerts []*model.Concert) error {
+	lazyInit()
+
+	db.DBS.Model(&user).Association("FavoriteConcerts").Clear()
+	db.DBS.Save(&user)
+	user.FavoriteConcerts = favoriteConcerts
+	return db.DBS.Save(&user).Error
+}
+
+func UpdateSubscripions(user model.User, subscripions []*model.Concert) error {
+	lazyInit()
+
+	db.DBS.Model(&user).Association("Subscriptions").Clear()
+	db.DBS.Save(&user)
+	user.Subscriptions = subscripions
+	return db.DBS.Save(&user).Error
 }
 
 func DeleteUser(id uint64) error {
@@ -100,4 +110,50 @@ func GetRoleByName(roleName string) (model.Role, error) {
 
 	err := rolesDB.First(&role, "title = ?", roleName).Error
 	return role, err
+}
+
+func UpdateUsersLikes(user model.User, usersLikes []*model.User) (model.User, error) {
+	lazyInit()
+
+	log.Print("usersLikes", usersLikes)
+
+	err := db.DBS.Model(&user).Association("UsersLikes").Clear()
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	err = usersDB.Save(&user).Error
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	user.UsersLikes = usersLikes
+
+	err = usersDB.Save(&user).Error
+	return user, err
+}
+
+func UpdateUsersDislikes(user model.User, usersDislikes []*model.User) (model.User, error) {
+	lazyInit()
+
+	log.Print("usersDislikes", usersDislikes)
+
+	err := db.DBS.Model(&user).Association("UsersDislikes").Clear()
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	err = usersDB.Save(&user).Error
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	user.UsersDislikes = usersDislikes
+
+	err = usersDB.Save(&user).Error
+	return user, err
 }

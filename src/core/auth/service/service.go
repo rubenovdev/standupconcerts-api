@@ -4,6 +4,7 @@ import (
 	commonService "comedians/src/common/service"
 	authModel "comedians/src/core/auth/model"
 	"comedians/src/core/users/repo"
+	"comedians/src/core/users/service"
 	usersModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/utils"
 	"errors"
@@ -20,9 +21,10 @@ const (
 )
 
 func CreateUser(user usersModel.User) error {
-	user, err := GetUserByEmail(user.Email)
+	_, err := GetUserByEmail(user.Email)
 
 	if err == nil {
+		log.Print(user)
 		return errors.New("email already taken")
 	}
 
@@ -35,6 +37,7 @@ func CreateUser(user usersModel.User) error {
 	}
 
 	user.Roles = append(user.Roles, roleUser)
+	log.Print("user", user, user.Email)
 
 	err = repo.CreateUser(user)
 	return err
@@ -58,9 +61,7 @@ func RecoveryUserPassword(email string) (string, error) {
 		return "", err
 	}
 
-	user.Password = newPassword
-
-	err = repo.UpdateUser(user)
+	err = service.UpdateUserPassword(user.Id, newPassword)
 
 	if err != nil {
 		return "", err

@@ -6,6 +6,7 @@ import (
 	"comedians/src/core/auth/service"
 	usersModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/utils"
+	"errors"
 	"log"
 	"net/http"
 
@@ -16,21 +17,23 @@ func signIn(c *gin.Context) {
 	var input authModel.SignInDto
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
 		return
 	}
+
+	log.Print("input sign in ", input)
 
 	user, err := service.GetUserByEmail(input.Email)
 
 	log.Print(user)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
 		return
 	}
 
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
 		return
 	}
 
@@ -49,14 +52,16 @@ func signUp(c *gin.Context) {
 	var input authModel.CreateUserDto
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
+
+	log.Print("input", input.Email)
 
 	err := service.CreateUser(usersModel.User{Email: input.Email, Password: input.Password})
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -67,14 +72,14 @@ func passwordRecovery(c *gin.Context) {
 	var input authModel.PasswordRecoveryDto
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "Incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
 		return
 	}
 
 	newPassword, err := service.RecoveryUserPassword(input.Email)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{

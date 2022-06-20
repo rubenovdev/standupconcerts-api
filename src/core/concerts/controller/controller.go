@@ -3,9 +3,11 @@ package controller
 import (
 	"comedians/src/common"
 	"comedians/src/core/concerts/comments/controller"
+	concertsModel "comedians/src/core/concerts/model"
 	"comedians/src/core/concerts/service"
-	"comedians/src/core/usersConcerts/model"
+	usersConcertsModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/middleware"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -14,20 +16,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var concertsPath string
-
 const (
-	concertsDir              = "concerts"
 	createConcertsPermission = "create_concerts"
 )
 
-func init() {
-	concertsPath = os.Getenv("ROOT_DIR") + "/" + concertsDir
-}
-
 func createConcert(c *gin.Context) {
 	c.MultipartForm()
-	// file, handler, err := c.Request.FormFile("concert")
 
 	form, err := c.MultipartForm()
 	log.Print(form)
@@ -35,24 +29,33 @@ func createConcert(c *gin.Context) {
 	if err != nil {
 		log.Panic(err)
 
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect file"})
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
 	}
 
-	file := form.File["concert"][0]
+	files := form.File["concert"]
+
+	if len(files) == 0 {
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("no file"))
+		return
+	}
+
+	file := files[0]
 	openedFile, _ := file.Open()
 
 	filepath, err := service.UploadConcertFile(openedFile, file.Filename)
 
 	if err != nil {
 		log.Panic(err)
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{Message: "error uploading file"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 
 		return
 	}
 
-	concert := model.Concert{}
+	concert := usersConcertsModel.Concert{}
 	concert.Filepath = filepath
 	concert.Title = c.Request.Form.Get("title")
+	concert.Description = c.Request.Form.Get("description")
 	userId, _ := c.Get("userId")
 
 	concert.UserId = userId.(uint64)
@@ -61,7 +64,7 @@ func createConcert(c *gin.Context) {
 		log.Panic(err)
 
 		service.DeleteConcertFile(filepath)
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 
 		return
 	}
@@ -72,87 +75,130 @@ func createConcert(c *gin.Context) {
 }
 
 func getConcerts(c *gin.Context) {
-	concerts, err := service.GetConrerts()
+	excludedIdStr, _ := c.GetQuery("excluded_id")
+	comedianIdStr, _ := c.GetQuery("comedian_id")
+	yearStr, _ := c.GetQuery("year")
+
+	year, _ := strconv.ParseUint(yearStr, 10, 64)
+	comedianId, _ := strconv.ParseUint(comedianIdStr, 10, 64)
+	sortBy, _ := c.GetQuery("sort_by")
+	excludedId, _ := strconv.ParseUint(excludedIdStr, 10, 64)
+
+	filters := concertsModel.Filters{Year: year, ComedianId: comedianId, SortBy: sortBy, ExcludedId: excludedId}
+
+	concerts, err := service.GetConrerts(filters)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	common.NewResultResponse(c, http.StatusCreated, common.ResultResponse{Result: concerts})
+	common.NewResultResponse(c, http.StatusCreated, common.ResultResponse{Result: gin.H{
+		"concerts": concerts,
+	}})
 }
 
 func deleteConcert(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	id, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+
+	err := service.DeleteConcert(id)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
 	}
-
-	err = service.DeleteConcert(id)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
-	}
-
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
 func getConcert(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
-	}
+	id, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	concert, err := service.GetConcert(id)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
 	}
 
-	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: concert})
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"concert": concert,
+	}})
 }
 
 func updateConcert(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	id, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
-	}
-
-	var concert model.Concert
+	var concert usersConcertsModel.Concert
 
 	if err := c.ShouldBindJSON(&concert); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect concert data"))
+		return
 	}
 
 	concert.Id = id
 
-	err = service.UpdateConcert(concert)
+	err := service.UpdateConcert(concert)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
+func like(c *gin.Context) {
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	userId, _ := c.Get("userId")
+
+	if err := service.Like(concertId, userId.(uint64)); err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+
+func incViews(c *gin.Context) {
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+
+	if err := service.IncViews(concertId); err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+func handleConcertId(c *gin.Context) {
+	_, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, errors.New("incorrect concert id"))
+
+		return
+	}
+}
+
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
-	group := server.Group("concerts", middleware.AuthMiddleware)
+	concertGroup := server.Group("concerts", middleware.AuthMiddleware)
 
-	concertPublicPath := os.Getenv("PUBLIC_ROOT_DIR") + "/" + concertsDir
+	server.Static(os.Getenv("PUBLIC_CONCERTS_DIR"), os.Getenv("CONCERTS_DIR"))
 
-	server.Static(concertPublicPath, concertsPath)
+	concertGroup.POST("", middleware.RoleMiddleware([]string{createConcertsPermission}), createConcert)
+	concertGroup.GET("", getConcerts)
 
-	group.POST("/", middleware.RoleMiddleware([]string{createConcertsPermission}), createConcert)
-	group.GET("/", getConcerts)
+	currentConcertGroup := concertGroup.Group(":concertId", handleConcertId)
 
-	group.DELETE("/:concertId", deleteConcert)
-	group.PUT("/:concertId", updateConcert)
-	group.GET("/:concertId", getConcert)
+	currentConcertGroup.DELETE("", deleteConcert)
+	currentConcertGroup.PUT("", updateConcert)
+	currentConcertGroup.GET("", getConcert)
 
-	controller.InitRoutes(group)
+	currentConcertGroup.PUT("like", like)
+	currentConcertGroup.PUT("views/inc", incViews)
 
-	return group
+	controller.InitRoutes(currentConcertGroup)
+
+	return currentConcertGroup
 }

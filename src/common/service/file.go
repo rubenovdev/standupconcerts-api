@@ -1,9 +1,11 @@
 package service
 
 import (
+	"comedians/src/utils"
 	"io"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 )
 
 func UploadFile(file multipart.File, filepath string) error {
@@ -28,4 +30,15 @@ func UploadFile(file multipart.File, filepath string) error {
 
 func DeleteFile(filepath string) error {
 	return os.Remove(filepath)
+}
+
+func MakeDirIfNotExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return os.Mkdir(path, os.ModePerm)
+	}
+	return nil
+}
+
+func ValidateExtension(filename string, admissibleExtensions []string) bool {
+	return utils.Contains(admissibleExtensions, filepath.Ext(filename))
 }

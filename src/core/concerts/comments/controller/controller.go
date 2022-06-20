@@ -4,6 +4,7 @@ import (
 	"comedians/src/common"
 	"comedians/src/core/concerts/comments/model"
 	"comedians/src/core/concerts/comments/service"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -11,18 +12,14 @@ import (
 )
 
 func createComment(c *gin.Context) {
+	userId, _ := c.Get("userId")
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+
 	var input model.CreateCommentDto
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
 
-		return
-	}
-
-	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
 		return
 	}
 
@@ -30,7 +27,7 @@ func createComment(c *gin.Context) {
 
 	comment.ConcertId = concertId
 	comment.Body = input.Body
-	comment.UserId = input.UserId
+	comment.UserId = userId.(uint64)
 
 	if err := service.CreateComment(comment); err != nil {
 		c.Status(500)
@@ -41,77 +38,89 @@ func createComment(c *gin.Context) {
 }
 
 func getComments(c *gin.Context) {
-	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
-		return
-	}
-
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
 	comments, err := service.GetComments(concertId)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: comments})
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"comments": comments,
+	}})
 
 }
 
 func deleteComment(c *gin.Context) {
-	concertId, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	commentId, _ := strconv.ParseUint(c.Param("commentId"), 10, 64)
+
+	err := service.DeleteComment(concertId, commentId)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
-	}
-
-	commentId, err := strconv.ParseUint(c.Param("commentId"), 10, 64)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect comment id"})
-	}
-
-	err = service.DeleteComment(concertId, commentId)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
 func updateComment(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("concertId"), 10, 64)
-
-	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert id"})
-	}
+	id, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
 	var concert model.Comment
 
 	if err := c.ShouldBindJSON(&concert); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, common.ErrorResponse{Message: "incorrect concert data"})
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect concert data"))
 	}
 
 	concert.Id = id
 
-	err = service.UpdateComment(concert)
+	err := service.UpdateComment(concert)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusInternalServerError, common.ErrorResponse{})
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
+func like(c *gin.Context) {
+	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	commentId, _ := strconv.ParseUint(c.Param("commentId"), 10, 64)
+	userId, _ := c.Get("userId")
+
+	if err := service.Like(concertId, commentId, userId.(uint64)); err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
+}
+
+func handleCommentId(c *gin.Context) {
+	_, err := strconv.ParseUint(c.Param("commentId"), 10, 64)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusInternalServerError, errors.New("incorrect comment id"))
+
+		return
+	}
+}
+
 func InitRoutes(router *gin.RouterGroup) *gin.RouterGroup {
-	commentsGroup := router.Group("/:concertId/comments")
+	commentsGroup := router.Group("comments")
+	{
+		commentsGroup.POST("", createComment)
+		commentsGroup.GET("", getComments)
+	}
 
-	commentsGroup.POST("/", createComment)
-	commentsGroup.GET("/", getComments)
+	currentCommentGroup := commentsGroup.Group(":commentId", handleCommentId)
 
-	commentsGroup.DELETE("/:commentId", deleteComment)
-	commentsGroup.PUT("/:commentsId", updateComment)
+	{
+		currentCommentGroup.DELETE("", deleteComment)
+		currentCommentGroup.PUT("", updateComment)
+		currentCommentGroup.PUT("like", like)
+	}
 
 	return commentsGroup
 }

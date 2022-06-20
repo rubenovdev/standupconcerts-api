@@ -1,15 +1,20 @@
 package service
 
 import (
+	commonService "comedians/src/common/service"
 	concertsRepo "comedians/src/core/concerts/repo"
 	"comedians/src/core/users/repo"
 	"comedians/src/core/usersConcerts/model"
 	"comedians/src/utils"
+	"errors"
+	"fmt"
 	"log"
+	"mime/multipart"
+	"os"
+	"time"
 )
 
 func UpdateUser(id uint64, user model.User) error {
-	user.Password = utils.HashPassword(user.Password)
 	user.Id = id
 
 	return repo.UpdateUser(user)
@@ -23,7 +28,7 @@ func GetUser(id uint64) (model.User, error) {
 	return repo.GetUser(id)
 }
 
-func GetUsers() ([]model.User, error) {
+func GetUsers() ([]*model.User, error) {
 	return repo.GetUsers()
 }
 
@@ -40,9 +45,9 @@ func AppendFavoriteConcert(userId uint64, concertId uint64) error {
 		return err
 	}
 
-	user.FavoriteConcerts = append(user.FavoriteConcerts, &concert)
+	favoriteConcerts := append(user.FavoriteConcerts, &concert)
 
-	return repo.UpdateUser(user)
+	return repo.UpdateFavoriteConcerts(user, favoriteConcerts)
 }
 
 func AppendFavoriteComedian(userId uint64, comedianId uint64) error {
@@ -57,10 +62,10 @@ func AppendFavoriteComedian(userId uint64, comedianId uint64) error {
 	if err != nil {
 		return err
 	}
-	
-	user.FavoriteComedians = append(user.FavoriteComedians, &comedian)
 
-	return repo.UpdateUser(user)
+	favoriteComedians := append(user.FavoriteComedians, &comedian)
+
+	return repo.UpdateFavoriteComedians(user, favoriteComedians)
 }
 
 func AppendSubscription(userId uint64, concertId uint64) error {
@@ -75,10 +80,10 @@ func AppendSubscription(userId uint64, concertId uint64) error {
 	if err != nil {
 		return err
 	}
-	
-	user.Subscriptions = append(user.Subscriptions, &concert)
 
-	return repo.UpdateUser(user)
+	subscriptions := append(user.Subscriptions, &concert)
+
+	return repo.UpdateSubscripions(user, subscriptions)
 }
 
 func DeleteFavoriteConcert(userId uint64, concertId uint64) error {
@@ -94,13 +99,13 @@ func DeleteFavoriteConcert(userId uint64, concertId uint64) error {
 		return err
 	}
 
-	user.FavoriteConcerts = utils.Filter(user.FavoriteConcerts, func(elem *model.Concert) bool {
+	favoriteConcerts := utils.Filter(user.FavoriteConcerts, func(elem *model.Concert) bool {
 		log.Print(elem.Id, concert.Id, elem.Id != concert.Id)
 
 		return elem.Id != concert.Id
 	})
 
-	return repo.UpdateUser(user)
+	return repo.UpdateFavoriteConcerts(user, favoriteConcerts)
 }
 
 func DeleteFavoriteComedian(userId uint64, comedianId uint64) error {
@@ -115,12 +120,40 @@ func DeleteFavoriteComedian(userId uint64, comedianId uint64) error {
 	if err != nil {
 		return err
 	}
-	
-	user.FavoriteComedians = utils.Filter(user.FavoriteComedians, func(elem *model.User) bool {
+
+	favoriteComedians := utils.Filter(user.FavoriteComedians, func(elem *model.User) bool {
 		return elem.Id != comedian.Id
 	})
 
-	return repo.UpdateUser(user)
+	return repo.UpdateFavoriteComedians(user, favoriteComedians)
+}
+
+func UpdateUserImage(userId uint64, file multipart.File, filename string) (string, error) {
+	var validExtensions = []string{".jpg", ".png"}
+
+	if contains := commonService.ValidateExtension(filename, validExtensions); !contains {
+		return "", errors.New("unsupported file")
+	}
+
+	dir := os.Getenv("USERS_IMAGES_DIR")
+	commonService.MakeDirIfNotExists(dir)
+
+	filepath := dir + "/" + fmt.Sprint(time.Now().Unix()) + ".jpg"
+	user, _ := repo.GetUser(userId)
+
+	if user.ImgUrl != nil {
+		commonService.DeleteFile(*user.ImgUrl)
+	}
+
+	if err := commonService.UploadFile(file, filepath); err != nil {
+		return "", err
+	}
+
+	user.ImgUrl = &filepath
+
+	repo.UpdateUser(user)
+
+	return filepath, nil
 }
 
 func DeleteSubscription(userId uint64, concertId uint64) error {
@@ -135,10 +168,130 @@ func DeleteSubscription(userId uint64, concertId uint64) error {
 	if err != nil {
 		return err
 	}
-	
-	user.Subscriptions = utils.Filter(user.Subscriptions, func(elem *model.Concert) bool {
+
+	subscriptions := utils.Filter(user.Subscriptions, func(elem *model.Concert) bool {
 		return elem.Id != concert.Id
 	})
 
-	return repo.UpdateUser(user)
+	return repo.UpdateSubscripions(user, subscriptions)
+}
+
+func UpdateUserPassword(userId uint64, password string) error {
+	user, err := GetUser(userId)
+
+	if err != nil {
+		return err
+	}
+
+	user.Password = utils.HashPassword(password)
+	// todo
+	err = UpdateUser(userId, user)
+
+	return err
+}
+
+func Like(userId uint64, likingUserId uint64) error {
+	likingUser, err := GetUser(likingUserId)
+	user, _ := GetUser(userId)
+
+	if err != nil {
+		return err
+	}
+
+	contains := false
+
+	for _, user := range user.UsersLikes {
+		if user.Id == likingUserId {
+			contains = true
+		}
+	}
+
+	var usersLikes []*model.User
+
+	if contains {
+		usersLikes = utils.Filter(user.UsersLikes, func(user *model.User) bool {
+			return user.Id != likingUserId
+		})
+	} else {
+		usersLikes = append(user.UsersLikes, &likingUser)
+	}
+
+	user, err = UpdateUsersLikes(user, usersLikes)
+
+	if contains {
+		*user.LikesCount -= 1
+	} else {
+		*user.LikesCount += 1
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = UpdateUser(user.Id, user)
+
+	for _, user := range user.UsersDislikes {
+		if user.Id == likingUserId {
+			Dislike(userId, likingUserId )
+		}
+	}
+
+	return err
+}
+
+func Dislike(userId uint64, likingUserId uint64) error {
+	likingUser, err := GetUser(likingUserId)
+	user, _ := GetUser(userId)
+
+	if err != nil {
+		return err
+	}
+
+	contains := false
+
+	for _, user := range user.UsersDislikes {
+		if user.Id == likingUserId {
+			contains = true
+		}
+	}
+
+	var usersLikes []*model.User
+
+	if contains {
+		usersLikes = utils.Filter(user.UsersDislikes, func(user *model.User) bool {
+			return user.Id != likingUserId
+		})
+	} else {
+		usersLikes = append(user.UsersDislikes, &likingUser)
+	}
+
+	user, err = UpdateUsersDislikes(user, usersLikes)
+
+	if contains {
+		*user.LikesCount -= 1
+	} else {
+		*user.LikesCount += 1
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = UpdateUser(user.Id, user)
+
+	for _, user := range user.UsersLikes {
+		if user.Id == likingUserId {
+			Like(user.Id, likingUserId)
+		}
+	}
+
+	return err
+}
+
+func UpdateUsersLikes(user model.User, usersLikes []*model.User) (model.User, error) {
+	return repo.UpdateUsersLikes(user, usersLikes)
+}
+
+func UpdateUsersDislikes(user model.User, usersDislikes []*model.User) (model.User, error) {
+	return repo.UpdateUsersDislikes(user, usersDislikes)
 }
