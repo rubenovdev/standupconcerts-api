@@ -19,7 +19,7 @@ var usersDB *gorm.DB
 var rolesDB *gorm.DB
 
 func lazyInit() {
-	usersDB = db.DBS.Preload("Concerts").Preload("Subscriptions").Preload("FavoriteComedians").Preload("Roles").Preload("Roles.Permissions").Preload("FavoriteConcerts").Table(usersTable)
+	usersDB = db.DBS.Preload("UsersLikes").Preload("UsersDislikes").Preload("Concerts").Preload("Subscriptions").Preload("FavoriteComedians").Preload("Roles").Preload("Roles.Permissions").Preload("FavoriteConcerts").Table(usersTable)
 	rolesDB = db.DBS.Table(rolesTable)
 }
 
@@ -56,12 +56,12 @@ func GetUserByEmail(email string) (model.User, error) {
 	return user, nil
 }
 
-func CreateUser(user model.User) error {
+func CreateUser(user model.User) (model.User, error) {
 	lazyInit()
 	log.Print("repo user", user)
 	err := usersDB.Create(&user).Error
 
-	return err
+	return user, err
 }
 
 func UpdateUser(user model.User) error {

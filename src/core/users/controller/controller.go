@@ -271,10 +271,10 @@ func deleteSubscription(c *gin.Context) {
 }
 
 func like(c *gin.Context) {
-	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	userId, _ := c.Get("userId")
 
-	if err := service.Like(concertId, userId.(uint64)); err != nil {
+	if err := service.Like(id, userId.(uint64)); err != nil {
 		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -283,10 +283,10 @@ func like(c *gin.Context) {
 }
 
 func dislike(c *gin.Context) {
-	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	userId, _ := c.Get("userId")
 
-	if err := service.Dislike(concertId, userId.(uint64)); err != nil {
+	if err := service.Dislike(id, userId.(uint64)); err != nil {
 		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -297,14 +297,18 @@ func dislike(c *gin.Context) {
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
 	server.Static(os.Getenv("PUBLIC_USERS_IMAGES_DIR"), os.Getenv("USERS_IMAGES_DIR"))
 
-	group := server.Group("users", middleware.AuthMiddleware)
+	usersGroup := server.Group("users")
+	{
+		usersGroup.GET("", getUsers)
+		usersGroup.GET(":id", getUser)
+	}
+	usersGroupAuth := usersGroup.Group("", middleware.AuthMiddleware)
+	{
+		usersGroupAuth.PUT(":id/like", like)
+		usersGroupAuth.PUT(":id/dislike", dislike)
+	}
 
-	group.GET("", getUsers)
-	group.GET(":id", getUser)
-	group.PUT(":id/likes", like)
-	group.PUT(":id/dislikes", dislike)
-
-	currentUserGroup := group.Group("current")
+	currentUserGroup := usersGroupAuth.Group("current")
 	{
 		currentUserGroup.PUT("", updateCurrentUser)
 		currentUserGroup.DELETE("", deleteCurrentUser)
@@ -313,14 +317,14 @@ func InitGroup(server *gin.Engine) *gin.RouterGroup {
 		currentUserGroup.PUT("image", updateUserImage)
 		currentUserGroup.PUT("password", updateUserPassword)
 
-		currentUserGroup.POST("favorite-concerts/:concertId", appendFavoriteConcert)
-		currentUserGroup.POST("subscriptions/:concertId", appendSubscription)
-		currentUserGroup.POST("favorite-comedians/:userId", appendFavoriteComedian)
+		currentUserGroup.PUT("favorite-concerts/:concertId", appendFavoriteConcert)
+		currentUserGroup.PUT("subscriptions/:concertId", appendSubscription)
+		currentUserGroup.PUT("favorite-comedians/:userId", appendFavoriteComedian)
 
 		currentUserGroup.DELETE("favorite-concerts/:concertId", deleteFavoriteConcert)
 		currentUserGroup.DELETE("subscriptions/:concertId", deleteSubscription)
 		currentUserGroup.DELETE("favorite-comedians/:userId", deleteFavoriteComedian)
 	}
 
-	return group
+	return usersGroup
 }

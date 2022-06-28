@@ -9,22 +9,13 @@ import (
 	"comedians/src/utils"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 )
-
-var concertsPath string
-
-const (
-	concertsDir = "concerts"
-)
-
-func init() {
-	concertsPath = os.Getenv("ROOT_DIR") + "/" + concertsDir
-	log.Print(concertsPath)
-}
 
 func GetConrerts(filters concertsModel.Filters) ([]usersConcertsModel.Concert, error) {
 	if filters.SortBy == "new" {
@@ -52,19 +43,56 @@ func CreateConcert(concert usersConcertsModel.Concert) error {
 	return err
 }
 
-func UploadConcertFile(file multipart.File, filename string) (string, error) {
+func UploadConcertFile(file multipart.File, primalFilename string) (string, string, error) {
+	DownloadVideoFromYoutube("")
 	var validExtensions = []string{".mp4", ".mov", ".wmv", ".avi", ".mpeg-4"}
 
-	if contains := commonService.ValidateExtension(filename, validExtensions); !contains {
-		return "", errors.New("unsupported file")
-	}
-	filepath := concertsPath + "/" + fmt.Sprint(time.Now().Unix()) + ".mp4"
-
-	if err := commonService.UploadFile(file, filepath); err != nil {
-		return "", err
+	if contains := commonService.ValidateExtension(primalFilename, validExtensions); !contains {
+		return "", "", errors.New("unsupported file")
 	}
 
-	return filepath, nil
+	concertsFramesPath := os.Getenv("CONCERTS_FRAMES_DIR")
+	concertsVideosPath := os.Getenv("CONCERTS_VIDEOS_DIR")
+
+	commonService.MakeDirIfNotExists(concertsFramesPath)
+	commonService.MakeDirIfNotExists(concertsVideosPath)
+
+	filename := fmt.Sprint(time.Now().Unix()) + ""
+
+	filepathVideo := concertsVideosPath + "/" + filename + ".mp4"
+	filepathFrame := concertsFramesPath + "/" + filename + ".jpg"
+
+	if err := commonService.UploadFile(file, filepathVideo); err != nil {
+		return "", "", err
+	}
+
+	log.Print("filepathVideo", filepathVideo)
+
+	err := commonService.ExtractFrames(filepathVideo, filepathFrame, 1)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return filepathVideo, filepathFrame, nil
+}
+
+func DownloadVideoFromYoutube(id string) {
+	url := "https://ytstream-download-youtube-videos.p.rapidapi.com/dl?id=UxxajLWwzqY&geo=DE"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("X-RapidAPI-Key", "81ed41932bmshdba01bfb8ffae4ap186db3jsn5b9351ed233a")
+	req.Header.Add("X-RapidAPI-Host", "ytstream-download-youtube-videos.p.rapidapi.com")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+
 }
 
 func DeleteConcert(id uint64) error {
@@ -74,12 +102,17 @@ func DeleteConcert(id uint64) error {
 		return err
 	}
 
-	commonService.DeleteFile(concert.Filepath)
+	commonService.DeleteFile(concert.VideoSrc)
+	commonService.DeleteFile(concert.FrameSrc)
 
 	return repo.DeleteConcert(id)
 }
 
-func DeleteConcertFile(filepath string) error {
+func DeleteConcertVideo(filepath string) error {
+	return commonService.DeleteFile(filepath)
+}
+
+func DeleteConcertFrame(filepath string) error {
 	return commonService.DeleteFile(filepath)
 }
 

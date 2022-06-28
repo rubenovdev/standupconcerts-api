@@ -1,11 +1,18 @@
 package service
 
 import (
+	"bytes"
 	"comedians/src/utils"
+	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/disintegration/imaging"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 func UploadFile(file multipart.File, filepath string) error {
@@ -41,4 +48,54 @@ func MakeDirIfNotExists(path string) error {
 
 func ValidateExtension(filename string, admissibleExtensions []string) bool {
 	return utils.Contains(admissibleExtensions, filepath.Ext(filename))
+}
+
+func ExtractFrames(inFilepath, outFilePath string, fps int) error {  
+	
+	buf := bytes.NewBuffer(nil)
+	err := ffmpeg.Input(inFilepath).
+		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", fps)}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(buf, os.Stdout).
+		Run()
+
+	if err != nil {
+		return err
+	}
+
+	img, err := imaging.Decode(buf)
+
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	err = imaging.Save(img, outFilePath)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DownloadFile(url string, outFilePath string) error {
+	out, err := os.Create(outFilePath)
+
+	if err != nil {
+		return err
+	}
+
+	defer out.Close()
+
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	
+	return err
 }

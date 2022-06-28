@@ -5,4 +5,5 @@ type Filters struct {
 	ComedianId uint64
 	SortBy     string // popular || new
 	ExcludedId uint64
+	Limit      uint64
 }

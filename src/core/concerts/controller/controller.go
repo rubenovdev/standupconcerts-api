@@ -43,7 +43,7 @@ func createConcert(c *gin.Context) {
 	file := files[0]
 	openedFile, _ := file.Open()
 
-	filepath, err := service.UploadConcertFile(openedFile, file.Filename)
+	filepathVideo, filepathFrame, err := service.UploadConcertFile(openedFile, file.Filename)
 
 	if err != nil {
 		log.Panic(err)
@@ -53,7 +53,8 @@ func createConcert(c *gin.Context) {
 	}
 
 	concert := usersConcertsModel.Concert{}
-	concert.Filepath = filepath
+	concert.VideoSrc = filepathVideo
+	concert.FrameSrc = filepathFrame
 	concert.Title = c.Request.Form.Get("title")
 	concert.Description = c.Request.Form.Get("description")
 	userId, _ := c.Get("userId")
@@ -63,14 +64,17 @@ func createConcert(c *gin.Context) {
 	if err := service.CreateConcert(concert); err != nil {
 		log.Panic(err)
 
-		service.DeleteConcertFile(filepath)
+		service.DeleteConcertVideo(filepathVideo)
+		service.DeleteConcertFrame(filepathVideo)
+
 		common.NewErrorResponse(c, http.StatusInternalServerError, err)
 
 		return
 	}
 
 	common.NewResultResponse(c, http.StatusCreated, common.ResultResponse{Result: gin.H{
-		"filepath": filepath,
+		"videoSrc": filepathVideo,
+		"frameSrc": filepathFrame,
 	}})
 }
 
@@ -78,13 +82,15 @@ func getConcerts(c *gin.Context) {
 	excludedIdStr, _ := c.GetQuery("excluded_id")
 	comedianIdStr, _ := c.GetQuery("comedian_id")
 	yearStr, _ := c.GetQuery("year")
+	limitStr, _ := c.GetQuery("limit")
 
 	year, _ := strconv.ParseUint(yearStr, 10, 64)
 	comedianId, _ := strconv.ParseUint(comedianIdStr, 10, 64)
 	sortBy, _ := c.GetQuery("sort_by")
 	excludedId, _ := strconv.ParseUint(excludedIdStr, 10, 64)
+	limit, _ := strconv.ParseUint(limitStr, 10, 64)
 
-	filters := concertsModel.Filters{Year: year, ComedianId: comedianId, SortBy: sortBy, ExcludedId: excludedId}
+	filters := concertsModel.Filters{Year: year, ComedianId: comedianId, SortBy: sortBy, ExcludedId: excludedId, Limit: limit}
 
 	concerts, err := service.GetConrerts(filters)
 
@@ -159,7 +165,6 @@ func like(c *gin.Context) {
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{})
 }
 
-
 func incViews(c *gin.Context) {
 	concertId, _ := strconv.ParseUint(c.Param("concertId"), 10, 64)
 
@@ -182,23 +187,30 @@ func handleConcertId(c *gin.Context) {
 }
 
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
-	concertGroup := server.Group("concerts", middleware.AuthMiddleware)
-
-	server.Static(os.Getenv("PUBLIC_CONCERTS_DIR"), os.Getenv("CONCERTS_DIR"))
-
-	concertGroup.POST("", middleware.RoleMiddleware([]string{createConcertsPermission}), createConcert)
-	concertGroup.GET("", getConcerts)
-
+	concertGroup := server.Group("concerts")
+	{
+		concertGroup.GET("", getConcerts)
+	}
+	concertGroupAuth := concertGroup.Group("", middleware.AuthMiddleware)
+	{
+		concertGroupAuth.POST("", middleware.RoleMiddleware([]string{createConcertsPermission}), createConcert)
+	}
 	currentConcertGroup := concertGroup.Group(":concertId", handleConcertId)
+	{
+		currentConcertGroup.GET("", getConcert)
+		currentConcertGroup.PUT("views/inc", incViews)
+	}
+	currentConcertGroupAuth := currentConcertGroup.Group("", middleware.AuthMiddleware, handleConcertId)
+	{
+		currentConcertGroupAuth.DELETE("", deleteConcert)
+		currentConcertGroupAuth.PUT("", updateConcert)
+		currentConcertGroupAuth.PUT("like", like)
+	}
 
-	currentConcertGroup.DELETE("", deleteConcert)
-	currentConcertGroup.PUT("", updateConcert)
-	currentConcertGroup.GET("", getConcert)
+	server.Static(os.Getenv("PUBLIC_CONCERTS_VIDEOS_DIR"), os.Getenv("CONCERTS_VIDEOS_DIR"))
+	server.Static(os.Getenv("PUBLIC_CONCERTS_FRAMES_DIR"), os.Getenv("CONCERTS_FRAMES_DIR"))
 
-	currentConcertGroup.PUT("like", like)
-	currentConcertGroup.PUT("views/inc", incViews)
-
-	controller.InitRoutes(currentConcertGroup)
+	controller.InitRoutes(currentConcertGroupAuth)
 
 	return currentConcertGroup
 }

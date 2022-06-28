@@ -13,7 +13,7 @@ type Comment struct {
 	Concert    usersConcertsModel.Concert `json:"concert" gorm:"foreignKey:ConcertId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Body       string                     `json:"body" binding:"required,min=1"`
 	LikesCount *uint64                     `json:"likesCount" gorm:"default:0;not null"`
-	UsersLikes []*usersConcertsModel.User `json:"-" gorm:"many2many:users_comments_likes"`
+	UsersLikes []*usersConcertsModel.User `json:"-" gorm:"many2many:users_comments_likes;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	CreatedAt  time.Time                  `json:"createdAt" gorm:"default:current_timestamp"`
 }
 

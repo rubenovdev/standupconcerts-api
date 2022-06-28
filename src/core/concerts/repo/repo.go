@@ -33,11 +33,11 @@ func GetConcerts(filters concertsModel.Filters) ([]usersConcertsModel.Concert, e
 
 	var concerts []usersConcertsModel.Concert
 
-	query := concertsDB.Order(filters.SortBy)
+	query := concertsDB.Order(filters.SortBy + " DESC")
 
-	// if (filters.ComedianId != 0) {
-	// 	query = query.Where("user_id  = ?", filters.ComedianId)
-	// }
+	if (filters.ComedianId != 0) {
+		query = query.Where("user_id  = ?", filters.ComedianId)
+	}
 
 	if filters.Year != 0 {
 		yearAt := fmt.Sprint(filters.Year) + "-01-01"
@@ -46,11 +46,14 @@ func GetConcerts(filters concertsModel.Filters) ([]usersConcertsModel.Concert, e
 		query = query.Where("created_at >= ? AND created_at <= ?", yearAt, yearTo)
 	}
 
+	if filters.Limit != 0 {
+		query.Limit(int(filters.Limit))
+	}
+
 	if filters.ExcludedId != 0 {
 		query = query.Where("id != ?", filters.ExcludedId)
 	}
 
-	// log.Print(query)
 
 	err := query.Find(&concerts).Error
 	return concerts, err

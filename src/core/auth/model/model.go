@@ -20,6 +20,12 @@ type PasswordRecoveryDto struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
+type AuthGoogleDto struct {
+	Email  string `json:"email" binding:"required,email"`
+	ImgUrl string `json:"imgUrl" binding:"required"`
+	Name   string `json:"name" binding:"required"`
+}
+
 type Token struct {
 	jwt.StandardClaims
 	Id    uint64

@@ -23,7 +23,11 @@ func Connect() error {
 		log.Fatal(err)
 	}
 
-	DBS.AutoMigrate(&usersConcertsModel.Permission{}, &usersConcertsModel.Role{}, &usersConcertsModel.User{}, &usersConcertsModel.Concert{}, &commentsModel.Comment{})
+	err = DBS.AutoMigrate(&usersConcertsModel.Permission{}, &usersConcertsModel.Role{}, &usersConcertsModel.User{}, &usersConcertsModel.Concert{}, &commentsModel.Comment{})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return nil
 }

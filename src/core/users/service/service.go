@@ -192,10 +192,22 @@ func UpdateUserPassword(userId uint64, password string) error {
 
 func Like(userId uint64, likingUserId uint64) error {
 	likingUser, err := GetUser(likingUserId)
-	user, _ := GetUser(userId)
 
 	if err != nil {
 		return err
+	}
+
+	user, err := GetUser(userId)
+
+	if err != nil {
+		return err
+	}
+
+	for _, userDislikes := range user.UsersDislikes {
+		if userDislikes.Id == likingUserId {
+			Dislike(userId, likingUserId)
+			user, _ = GetUser(userId)
+		}
 	}
 
 	contains := false
@@ -219,6 +231,7 @@ func Like(userId uint64, likingUserId uint64) error {
 	user, err = UpdateUsersLikes(user, usersLikes)
 
 	if contains {
+		log.Print("likes count minus")
 		*user.LikesCount -= 1
 	} else {
 		*user.LikesCount += 1
@@ -230,27 +243,33 @@ func Like(userId uint64, likingUserId uint64) error {
 
 	err = UpdateUser(user.Id, user)
 
-	for _, user := range user.UsersDislikes {
-		if user.Id == likingUserId {
-			Dislike(userId, likingUserId )
-		}
-	}
-
 	return err
 }
 
-func Dislike(userId uint64, likingUserId uint64) error {
-	likingUser, err := GetUser(likingUserId)
-	user, _ := GetUser(userId)
+func Dislike(userId uint64, dislikingUserId uint64) error {
+	likingUser, err := GetUser(dislikingUserId)
 
 	if err != nil {
 		return err
 	}
 
+	user, err := GetUser(userId)
+
+	if err != nil {
+		return err
+	}
+
+	for _, userLikes := range user.UsersLikes {
+		if userLikes.Id == dislikingUserId {
+			Like(user.Id, dislikingUserId)
+			user, _ = GetUser(userId)
+		}
+	}
+
 	contains := false
 
 	for _, user := range user.UsersDislikes {
-		if user.Id == likingUserId {
+		if user.Id == dislikingUserId {
 			contains = true
 		}
 	}
@@ -259,7 +278,7 @@ func Dislike(userId uint64, likingUserId uint64) error {
 
 	if contains {
 		usersLikes = utils.Filter(user.UsersDislikes, func(user *model.User) bool {
-			return user.Id != likingUserId
+			return user.Id != dislikingUserId
 		})
 	} else {
 		usersLikes = append(user.UsersDislikes, &likingUser)
@@ -268,9 +287,9 @@ func Dislike(userId uint64, likingUserId uint64) error {
 	user, err = UpdateUsersDislikes(user, usersLikes)
 
 	if contains {
-		*user.LikesCount -= 1
+		*user.DislikesCount -= 1
 	} else {
-		*user.LikesCount += 1
+		*user.DislikesCount += 1
 	}
 
 	if err != nil {
@@ -278,12 +297,6 @@ func Dislike(userId uint64, likingUserId uint64) error {
 	}
 
 	err = UpdateUser(user.Id, user)
-
-	for _, user := range user.UsersLikes {
-		if user.Id == likingUserId {
-			Like(user.Id, likingUserId)
-		}
-	}
 
 	return err
 }

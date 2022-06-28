@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"time"
-
 	"gopkg.in/dgrijalva/jwt-go.v3"
 )
 
@@ -20,27 +19,70 @@ const (
 	tokenTTL = 7 * 24 * time.Hour
 )
 
-func CreateUser(user usersModel.User) error {
+func CreateUser(user usersModel.User) (usersModel.User, error) {
 	_, err := GetUserByEmail(user.Email)
 
 	if err == nil {
-		log.Print(user)
-		return errors.New("email already taken")
+		return usersModel.User{}, errors.New("email already taken")
 	}
-
 
 	user.Password = utils.HashPassword(user.Password)
 	roleUser, err := repo.GetRoleByName("user")
 
 	if err != nil {
-		return err
+		return usersModel.User{}, err
 	}
 
 	user.Roles = append(user.Roles, roleUser)
 	log.Print("user", user, user.Email)
 
-	err = repo.CreateUser(user)
-	return err
+	user, err = repo.CreateUser(user)
+	log.Print("user id !!", user.Id)
+	return user, err
+}
+
+func AuthGoogle(dto authModel.AuthGoogleDto) (string, error) {
+	if user, err := GetUserByEmail(dto.Email); err == nil {
+		signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+		if err != nil {
+			return "", err
+		}
+
+		return signedToken, nil
+	}
+
+	pwd, err := utils.GeneratePassword()
+
+	if err != nil {
+		return "", err
+	}
+
+	dir := os.Getenv("USERS_IMAGES_DIR")
+	commonService.MakeDirIfNotExists(dir)
+
+	filepath := dir + "/" + fmt.Sprint(time.Now().Unix()) + ".jpg"
+
+	err = commonService.DownloadFile(dto.ImgUrl, filepath)
+
+	if err != nil {
+		return "", err
+	}
+
+	user, err := CreateUser(usersModel.User{Email: dto.Email, Password: pwd, Name: dto.Name, ImgUrl: &filepath})
+
+	if err != nil {
+		commonService.DeleteFile(filepath)
+		return "", err
+	}
+
+	signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
 }
 
 func GetUserByEmail(email string) (usersModel.User, error) {

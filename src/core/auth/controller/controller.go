@@ -17,7 +17,7 @@ func signIn(c *gin.Context) {
 	var input authModel.SignInDto
 
 	if err := c.BindJSON(&input); err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -28,19 +28,18 @@ func signIn(c *gin.Context) {
 	log.Print(user)
 
 	if err != nil {
-		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
-		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("incorrect data"))
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
 
 	signedToken, err := service.GenerateTokenJWT(user.Id, user.Roles)
 
 	if err != nil {
-		log.Panic(err)
 		return
 	}
 	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
@@ -58,7 +57,7 @@ func signUp(c *gin.Context) {
 
 	log.Print("input", input.Email)
 
-	err := service.CreateUser(usersModel.User{Email: input.Email, Password: input.Password})
+	_, err := service.CreateUser(usersModel.User{Email: input.Email, Password: input.Password})
 
 	if err != nil {
 		common.NewErrorResponse(c, http.StatusBadRequest, err)
@@ -87,11 +86,32 @@ func passwordRecovery(c *gin.Context) {
 	}})
 }
 
+func authGoogle(c *gin.Context) {
+	var input authModel.AuthGoogleDto
+
+	if err := c.BindJSON(&input); err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	signedToken, err := service.AuthGoogle(input)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"jwt": signedToken,
+	}})
+}
+
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
 	group := server.Group("auth")
 
 	group.POST("/sign-in", signIn)
 	group.POST("/sign-up", signUp)
+	group.POST("/google", authGoogle)
 	group.POST("/password-recovery", passwordRecovery)
 
 	return group
