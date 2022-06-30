@@ -24,7 +24,6 @@ func createConcert(c *gin.Context) {
 	c.MultipartForm()
 
 	form, err := c.MultipartForm()
-	log.Print(form)
 
 	if err != nil {
 		log.Panic(err)
@@ -34,21 +33,36 @@ func createConcert(c *gin.Context) {
 	}
 
 	files := form.File["concert"]
+	youtubeLink := c.Request.Form.Get("youtubeVideoLink")
 
-	if len(files) == 0 {
-		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("no file"))
-		return
-	}
+	var (
+		filepathVideo string
+		filepathFrame string
+	)
 
-	file := files[0]
-	openedFile, _ := file.Open()
+	if len(files) != 0 {
+		file := files[0]
+		openedFile, _ := file.Open()
 
-	filepathVideo, filepathFrame, err := service.UploadConcertFile(openedFile, file.Filename)
+		filepathVideo, filepathFrame, err = service.UploadConcertFile(openedFile, file.Filename)
 
-	if err != nil {
-		log.Panic(err)
-		common.NewErrorResponse(c, http.StatusInternalServerError, err)
+		if err != nil {
+			log.Panic(err)
+			common.NewErrorResponse(c, http.StatusInternalServerError, err)
 
+			return
+		}
+	} else if len(youtubeLink) != 0 {
+		filepathVideo, filepathFrame, err = service.DownloadVideoFromYoutube(youtubeLink)
+
+		if err != nil {
+			log.Panic(err)
+			common.NewErrorResponse(c, http.StatusInternalServerError, err)
+
+			return
+		}
+	} else {
+		common.NewErrorResponse(c, http.StatusBadRequest, errors.New("need a youtube link or file"))
 		return
 	}
 

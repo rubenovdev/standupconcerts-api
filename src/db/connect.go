@@ -14,7 +14,6 @@ import (
 func Connect() error {
 	c := cfg.Config()
 	dsn := fmt.Sprintf("host=%s port=%s user=%s sslmode=disable password=%s dbname=%s", c.PgHost, c.PgPort, c.PgUser, c.PgPassword, c.PgDbName)
-	log.Println(dsn)
 	var err error
 
 	DBS, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})

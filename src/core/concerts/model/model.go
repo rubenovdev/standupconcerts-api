@@ -7,3 +7,9 @@ type Filters struct {
 	ExcludedId uint64
 	Limit      uint64
 }
+
+type YoutubeDownloadBody struct {
+	Link     string `json:"link"`
+	OutDir   string `json:"outDir"`
+	Filename string `json:"filename"`
+}

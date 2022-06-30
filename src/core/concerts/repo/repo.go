@@ -5,10 +5,6 @@ import (
 	usersConcertsModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/db"
 	"fmt"
-	"log"
-
-	// "log"
-
 	"gorm.io/gorm"
 )
 
@@ -82,8 +78,6 @@ func UpdateConcert(concert usersConcertsModel.Concert) error {
 
 func UpdateUsersLikes(concert usersConcertsModel.Concert, usersLikes []*usersConcertsModel.User) (usersConcertsModel.Concert, error) {
 	lazyInit()
-
-	log.Print("usersLikes", usersLikes)
 
 	err := db.DBS.Model(&concert).Association("UsersLikes").Clear()
 

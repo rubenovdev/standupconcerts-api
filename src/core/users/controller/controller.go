@@ -9,7 +9,6 @@ import (
 	"comedians/src/middleware"
 	"comedians/src/utils"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -70,8 +69,6 @@ func updateUserPassword(c *gin.Context) {
 		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
-
-	log.Print(input)
 
 	err := service.UpdateUserPassword(id.(uint64), input.Password)
 

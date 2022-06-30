@@ -9,10 +9,10 @@ import (
 	"comedians/src/utils"
 	"errors"
 	"fmt"
+	"gopkg.in/dgrijalva/jwt-go.v3"
 	"log"
 	"os"
 	"time"
-	"gopkg.in/dgrijalva/jwt-go.v3"
 )
 
 const (
@@ -42,7 +42,7 @@ func CreateUser(user usersModel.User) (usersModel.User, error) {
 }
 
 func AuthGoogle(dto authModel.AuthGoogleDto) (string, error) {
-	if user, err := GetUserByEmail(dto.Email); err == nil {
+	if user, err := repo.GetUserByGoogleId(dto.Id); err == nil {
 		signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
 
 		if err != nil {
@@ -69,7 +69,95 @@ func AuthGoogle(dto authModel.AuthGoogleDto) (string, error) {
 		return "", err
 	}
 
-	user, err := CreateUser(usersModel.User{Email: dto.Email, Password: pwd, Name: dto.Name, ImgUrl: &filepath})
+	user, err := CreateUser(usersModel.User{Email: dto.Email, Password: pwd, Name: dto.Name, ImgUrl: &filepath, GoogleId: dto.Id})
+
+	if err != nil {
+		commonService.DeleteFile(filepath)
+		return "", err
+	}
+
+	signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
+}
+
+func AuthVk(dto authModel.AuthVkDto) (string, error) {
+	if user, err := repo.GetUserByVkId(dto.Id); err == nil {
+		signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+		if err != nil {
+			return "", err
+		}
+
+		return signedToken, nil
+	}
+
+	pwd, err := utils.GeneratePassword()
+
+	if err != nil {
+		return "", err
+	}
+
+	dir := os.Getenv("USERS_IMAGES_DIR")
+	commonService.MakeDirIfNotExists(dir)
+
+	filepath := dir + "/" + fmt.Sprint(time.Now().Unix()) + ".jpg"
+
+	err = commonService.DownloadFile(dto.ImgUrl, filepath)
+
+	if err != nil {
+		return "", err
+	}
+
+	user, err := CreateUser(usersModel.User{Email: dto.Email, Password: pwd, Name: dto.Name, ImgUrl: &filepath, VkId: dto.Id})
+
+	if err != nil {
+		commonService.DeleteFile(filepath)
+		return "", err
+	}
+
+	signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
+}
+
+func AuthYandex(dto authModel.AuthYandexDto) (string, error) {
+	if user, err := repo.GetUserByYandexId(dto.Id); err == nil {
+		signedToken, err := GenerateTokenJWT(user.Id, user.Roles)
+
+		if err != nil {
+			return "", err
+		}
+
+		return signedToken, nil
+	}
+
+	pwd, err := utils.GeneratePassword()
+
+	if err != nil {
+		return "", err
+	}
+
+	dir := os.Getenv("USERS_IMAGES_DIR")
+	commonService.MakeDirIfNotExists(dir)
+
+	filepath := dir + "/" + fmt.Sprint(time.Now().Unix()) + ".jpg"
+
+	err = commonService.DownloadFile(dto.ImgUrl, filepath)
+
+	if err != nil {
+		return "", err
+	}
+
+	user, err := CreateUser(usersModel.User{Email: dto.Email, Password: pwd, Name: dto.Name, ImgUrl: &filepath, YandexId: dto.Id})
 
 	if err != nil {
 		commonService.DeleteFile(filepath)

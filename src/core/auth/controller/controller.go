@@ -7,9 +7,7 @@ import (
 	usersModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/utils"
 	"errors"
-	"log"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,11 +19,7 @@ func signIn(c *gin.Context) {
 		return
 	}
 
-	log.Print("input sign in ", input)
-
 	user, err := service.GetUserByEmail(input.Email)
-
-	log.Print(user)
 
 	if err != nil {
 		common.NewErrorResponse(c, http.StatusBadRequest, err)
@@ -54,8 +48,6 @@ func signUp(c *gin.Context) {
 		common.NewErrorResponse(c, http.StatusBadRequest, err)
 		return
 	}
-
-	log.Print("input", input.Email)
 
 	_, err := service.CreateUser(usersModel.User{Email: input.Email, Password: input.Password})
 
@@ -106,12 +98,54 @@ func authGoogle(c *gin.Context) {
 	}})
 }
 
+func authVk(c *gin.Context) {
+	var input authModel.AuthVkDto
+
+	if err := c.BindJSON(&input); err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	signedToken, err := service.AuthVk(input)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"jwt": signedToken,
+	}})
+}
+
+func authYandex(c *gin.Context) {
+	var input authModel.AuthYandexDto
+
+	if err := c.BindJSON(&input); err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	signedToken, err := service.AuthYandex(input)
+
+	if err != nil {
+		common.NewErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	common.NewResultResponse(c, http.StatusOK, common.ResultResponse{Result: gin.H{
+		"jwt": signedToken,
+	}})
+}
+
 func InitGroup(server *gin.Engine) *gin.RouterGroup {
 	group := server.Group("auth")
 
 	group.POST("/sign-in", signIn)
 	group.POST("/sign-up", signUp)
 	group.POST("/google", authGoogle)
+	group.POST("/vk", authVk)
+	group.POST("/yandex", authYandex)
 	group.POST("/password-recovery", passwordRecovery)
 
 	return group

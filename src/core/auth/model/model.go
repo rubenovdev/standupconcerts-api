@@ -22,8 +22,23 @@ type PasswordRecoveryDto struct {
 
 type AuthGoogleDto struct {
 	Email  string `json:"email" binding:"required,email"`
-	ImgUrl string `json:"imgUrl" binding:"required"`
+	ImgUrl string `json:"imgUrl"`
 	Name   string `json:"name" binding:"required"`
+	Id     string `json:"id" binding:"required"`
+}
+
+type AuthVkDto struct {
+	Email  string `json:"email" binding:"required,email"`
+	ImgUrl string `json:"imgUrl"`
+	Name   string `json:"name" binding:"required"`
+	Id     uint64 `json:"id" binding:"required"`
+}
+
+type AuthYandexDto struct {
+	Email  string `json:"email" binding:"required,email"`
+	ImgUrl string `json:"imgUrl"`
+	Name   string `json:"name" binding:"required"`
+	Id     string `json:"id" binding:"required"`
 }
 
 type Token struct {

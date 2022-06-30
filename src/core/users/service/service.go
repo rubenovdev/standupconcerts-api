@@ -8,7 +8,6 @@ import (
 	"comedians/src/utils"
 	"errors"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"os"
 	"time"
@@ -100,8 +99,6 @@ func DeleteFavoriteConcert(userId uint64, concertId uint64) error {
 	}
 
 	favoriteConcerts := utils.Filter(user.FavoriteConcerts, func(elem *model.Concert) bool {
-		log.Print(elem.Id, concert.Id, elem.Id != concert.Id)
-
 		return elem.Id != concert.Id
 	})
 
@@ -231,7 +228,6 @@ func Like(userId uint64, likingUserId uint64) error {
 	user, err = UpdateUsersLikes(user, usersLikes)
 
 	if contains {
-		log.Print("likes count minus")
 		*user.LikesCount -= 1
 	} else {
 		*user.LikesCount += 1

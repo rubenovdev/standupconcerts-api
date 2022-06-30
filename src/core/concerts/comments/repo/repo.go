@@ -4,8 +4,6 @@ import (
 	commentsModel "comedians/src/core/concerts/comments/model"
 	usersConcertsModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/db"
-	"log"
-
 	"gorm.io/gorm"
 )
 
@@ -74,7 +72,6 @@ func UpdateUsersLikes(comment commentsModel.Comment, usersLikes []*usersConcerts
 		return commentsModel.Comment{}, err
 	}
 
-	log.Print(usersLikes)
 	comment.UsersLikes = usersLikes
 
 	err = db.DBS.Save(&comment).Error

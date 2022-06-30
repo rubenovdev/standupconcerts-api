@@ -6,7 +6,6 @@ import (
 	usersService "comedians/src/core/users/service"
 	usersConcertsModel "comedians/src/core/usersConcerts/model"
 	"comedians/src/utils"
-	"log"
 )
 
 func CreateComment(comment commentsModel.Comment) error {
@@ -40,8 +39,6 @@ func Like(concertId uint64, commentId uint64, userId uint64) error {
 	contains := false
 
 	for _, user := range comment.UsersLikes {
-		log.Print("userId", user.Id, "Second", userId)
-
 		if user.Id == userId {
 			contains = true
 		}

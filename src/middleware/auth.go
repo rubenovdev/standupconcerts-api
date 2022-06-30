@@ -2,7 +2,6 @@ package middleware
 
 import (
 	authService "comedians/src/core/auth/service"
-	"log"
 	"net/http"
 	"strings"
 
@@ -14,7 +13,6 @@ const (
 )
 
 func AuthMiddleware(c *gin.Context) {
-	log.Print("requewst!!")
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
 		c.JSON(401, gin.H{

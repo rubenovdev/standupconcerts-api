@@ -1,8 +1,6 @@
 package common
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +18,6 @@ func NewErrorResponse(c *gin.Context, statusCode int, err error) {
 }
 
 func NewResultResponse(c *gin.Context, statusCode int, result ResultResponse) {
-	log.Print(result.Message)
 	if len(result.Message) == 0 {
 		result.Message = "successfully"
 	}

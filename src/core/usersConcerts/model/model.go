@@ -23,6 +23,9 @@ type User struct {
 	UsersDislikes     []*User    `json:"-" gorm:"many2many:users_comedians_dislikes;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	LikesCount        *uint64    `json:"likesCount" gorm:"default:0;not null"`
 	DislikesCount     *uint64    `json:"dislikesCount" gorm:"default:0;not null"`
+	GoogleId          string     `json:"-"`
+	YandexId          string     `json:"-"`
+	VkId              uint64      `json:"-"`
 }
 
 type Role struct {

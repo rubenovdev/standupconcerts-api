@@ -4,8 +4,6 @@ import (
 	"comedians/src/core/usersConcerts/model"
 	"comedians/src/db"
 	"errors"
-	"log"
-
 	"gorm.io/gorm"
 )
 
@@ -43,6 +41,30 @@ func GetUsers() ([]*model.User, error) {
 	return users, err
 }
 
+func GetUserByYandexId(id string) (model.User, error) {
+	lazyInit()
+
+	var user model.User
+	err := usersDB.First(&user, "yandex_id = ?", id).Error
+	return user, err
+}
+
+func GetUserByVkId(id uint64) (model.User, error) {
+	lazyInit()
+
+	var user model.User
+	err := usersDB.First(&user, "vk_id = ?", id).Error
+	return user, err
+}
+
+func GetUserByGoogleId(id string) (model.User, error) {
+	lazyInit()
+
+	var user model.User
+	err := usersDB.First(&user, "google_id = ?", id).Error
+	return user, err
+}
+
 func GetUserByEmail(email string) (model.User, error) {
 	lazyInit()
 
@@ -58,7 +80,6 @@ func GetUserByEmail(email string) (model.User, error) {
 
 func CreateUser(user model.User) (model.User, error) {
 	lazyInit()
-	log.Print("repo user", user)
 	err := usersDB.Create(&user).Error
 
 	return user, err
@@ -115,8 +136,6 @@ func GetRoleByName(roleName string) (model.Role, error) {
 func UpdateUsersLikes(user model.User, usersLikes []*model.User) (model.User, error) {
 	lazyInit()
 
-	log.Print("usersLikes", usersLikes)
-
 	err := db.DBS.Model(&user).Association("UsersLikes").Clear()
 
 	if err != nil {
@@ -137,8 +156,6 @@ func UpdateUsersLikes(user model.User, usersLikes []*model.User) (model.User, er
 
 func UpdateUsersDislikes(user model.User, usersDislikes []*model.User) (model.User, error) {
 	lazyInit()
-
-	log.Print("usersDislikes", usersDislikes)
 
 	err := db.DBS.Model(&user).Association("UsersDislikes").Clear()
 

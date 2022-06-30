@@ -6,14 +6,13 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
-	github.com/knadh/go-get-youtube v0.0.0-20191105144436-94a3fa9fdab3
 	github.com/sethvargo/go-password v0.2.0
 	github.com/u2takey/ffmpeg-go v0.4.1
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	gopkg.in/dgrijalva/jwt-go.v3 v3.2.0
 	gopkg.in/mail.v2 v2.3.1
 	gorm.io/driver/postgres v1.3.7
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.23.6
 )
 
 require (
@@ -44,11 +43,10 @@ require (
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
-	golang.org/x/net v0.0.0-20220524220425-1d687d428aca // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
+	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

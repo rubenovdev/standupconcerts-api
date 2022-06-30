@@ -50,8 +50,8 @@ func ValidateExtension(filename string, admissibleExtensions []string) bool {
 	return utils.Contains(admissibleExtensions, filepath.Ext(filename))
 }
 
-func ExtractFrames(inFilepath, outFilePath string, fps int) error {  
-	
+func ExtractFrames(inFilepath, outFilePath string, fps int) error {
+
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFilepath).
 		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", fps)}).
@@ -66,7 +66,6 @@ func ExtractFrames(inFilepath, outFilePath string, fps int) error {
 	img, err := imaging.Decode(buf)
 
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
 
@@ -96,6 +95,14 @@ func DownloadFile(url string, outFilePath string) error {
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
-	
+
 	return err
+}
+
+func GetRootDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
 }
